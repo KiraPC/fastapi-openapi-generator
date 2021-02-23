@@ -1,6 +1,4 @@
-import sys
-import json
-import click
+import sys, json, click, mock
 from fastapi import FastAPI
 from uvicorn.importer import import_from_string
 from generator.lib.exceptions import NotFastAPIException
@@ -29,8 +27,18 @@ from generator.lib.exceptions import NotFastAPIException
     show_default=True,
     help="The name the openapi file will assume."
 )
-def main(app, app_dir, output_dir, file_name):
+@click.option(
+    "--mock-class",
+    "classes_to_mock",
+    multiple=True,
+    help="Use it to mock a package that is not usefully for the openapi generation and block the fastapi start"
+)
+def main(app, app_dir, output_dir, file_name, classes_to_mock):
     sys.path.insert(0, app_dir)
+
+    if classes_to_mock:
+        for class_to_mock in classes_to_mock:
+            mock.patch(class_to_mock).start()
 
     fastapi: FastAPI = import_from_string(app)
 
